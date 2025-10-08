@@ -18,7 +18,7 @@ def display_components(bits):
     mantissa = bits[12:]
 
     print(f"Sign bit:    {sign}")
-    print(f"Exponent:    {exponent}  (decimal {int(exponent, 2)})")
+    print(f"Exponent:    {exponent} ")
     print(f"Mantissa:    {mantissa}")
     print(f"Full binary: {bits}")
 
@@ -29,19 +29,17 @@ def compare_conversions(real_to_float64_fn, float64_to_real_fn, nums, title="Tes
     """
     import math
 
-    print("\n" + "=" * 70)
-    print(title.center(70))
-    print("=" * 70)
+    print("\n" + "=" * 80)
+    print(title.center(80))
+    print("=" * 80)
 
     for x in nums:
         bits = real_to_float64_fn(x)
         recovered = float64_to_real_fn(bits)
-        error = abs(x - recovered) if not math.isnan(x) else 0
 
         print(f"\nOriginal:  {x}")
         display_components(bits)
         print(f"Recovered: {recovered}")
-        print(f"Error:     {error}")
 
 
 def compare_methods(fn_chop, fn_round, test_val):
@@ -52,9 +50,9 @@ def compare_methods(fn_chop, fn_round, test_val):
     bits_round = fn_round(test_val)
     same = bits_chop == bits_round
 
-    print("\n" + "-" * 70)
+    print("\n" + "-" * 80)
     print(f"Comparison for {test_val}")
-    print("-" * 70)
+    print("-" * 80)
     print(f"Chopping: {bits_chop}")
     print(f"Rounding: {bits_round}")
     print(f"Same result? {same}")

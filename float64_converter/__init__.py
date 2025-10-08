@@ -15,13 +15,13 @@ Modules:
 """
 
 # __init__.py
-from float64_converter.converter import (
+from .converter import (
     real_to_float64_chopping,
     real_to_float64_rounding,
     float64_to_real
 )
 
-from float64_converter.utils import (
+from .utils import (
     display_components,
     compare_conversions,
     compare_methods
