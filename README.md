@@ -1,8 +1,9 @@
-# 64-Bit-Floating-Point-Converter
-A simple tool for converting real numbers to 64-bit floating-point (IEEE 754) binary representation and back.  
-Supports both rounding and chopping algorithms for precision handling.
+# Float 64 Converter
 
-## Features
-- Convert real numbers → 64-bit IEEE 754 binary
-- Convert binary strings → real numbers
-- Optional rounding/chopping utilities
+A small Python library for exploring **IEEE 754 double-precision (64-bit) floating-point** representation.
+
+It lets you:
+- Convert real numbers to 64-bit binary strings using **chopping** or **rounding**.
+- Convert binary strings back to their **decimal (float)** values.
+- Display the **sign**, **exponent**, and **mantissa** components.
+- Compare rounding behaviors and conversion errors visually.
