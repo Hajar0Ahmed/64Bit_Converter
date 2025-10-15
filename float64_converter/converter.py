@@ -31,7 +31,7 @@ def real_to_float64(x , round=False):
     s = 0 if x >= 0 else 1
     x = abs(x)
     
-    #Check for The Following Special Cases
+    # Check for The Following Special Cases
     if math.isnan(x):
         # x is undefined or something we can't calculate
         return "0" + "1" * 11 + "1" + "0" * 51  # NaN
@@ -42,73 +42,63 @@ def real_to_float64(x , round=False):
         # x is zero
         return f"{s}" + "0" * 63
     
-    #Step 2: Find the c and f
-    
+    # Step 2: Find the c and f
     # We use the following Equation: |x| = 2^cpart * fpart
-    # Where cparts = c - 1023 and fpart = f + 1 with  1< fpart <= 2
+    # Where cparts = c - 1023 and fpart = f + 1 with 1 < fpart <= 2
     
     cpart = 0
     fpart = x
     
-    # If x>=2 we keep dividing it until we have |x| = 2^cpart * fpart
+    # If x >= 2 we keep dividing it until we have |x| = 2^cpart * fpart
     # with fpart <= 2
     while fpart >= 2:
         fpart /= 2
         cpart += 1
     
-    # If fpart< 1 we make a correction by simpilifying |x| = 2^(cpart-1)*2* fpart
-    # We repeat this process of pulling out a 2 from 2^cpart until we have 1< fpart <= 2
+    # If fpart < 1 we make a correction by simplifying |x| = 2^(cpart-1)*2*fpart
+    # We repeat this process until 1 < fpart <= 2
     while fpart < 1:
         fpart *= 2
         cpart -= 1
-            
-    
+        
     # Calculate c from cpart
     c = cpart + 1023
     
-    #calculate f from fpart
+    # Calculate f from fpart
     f = fpart - 1
     
-    # Check for Overflow/Underflow (if we do NOT have 0<c<2047)
+    # Check for Overflow/Underflow (if we do NOT have 0 < c < 2047)
     if c >= 2047: # Overflow to infinity
-        return s + '1'*11 + '0'*52
+        return f"{s}" + '1'*11 + '0'*52
     if c <= 0:  # Underflow to zero
-        return s + '0'*63
+        return f"{s}" + '0'*63
     
-    # Step 2: Find 11bit: c10,c9,c8,...,c0
+    # Step 3: Find 11bit: c10,c9,c8,...,c0
     eleven_bits = format(c, '011b')
-       
-    # Step 3: Find 52bit: f1,f2,...,f53 (extra bit for rounding)
+    
+    # Step 4: Find 52bit: f1,f2,...,f53 (extra bit for rounding)
     fiftythree_bits = ''
     ftemp = f
     
     for _ in range(53):
-        # We Use the formula f= f1*2^(-1) + f2*2^(-2)+...+ f52*2^(-52) + f53*2^(-53)
-        
-        ## step 1: we set fi= 1 and multiply both sides of the equation by 2
+        # f = f1*2^-1 + f2*2^-2 + ... + f52*2^-52 + f53*2^-53
         ftemp *= 2
-        
-        ## step 2: If ftemp < 1 then fi = 0 otherwise fi=1
         bit = int(ftemp)
-        
-        ## step 3: Add fi to our 52bit string
         fiftythree_bits += str(bit)
-        
-        ## step 4: Calculate ftemp=ftemp-fi
         ftemp -= bit
     
-    #Chopping Result
+    # Step 5: Chopping result
     fiftytwo_bits = fiftythree_bits[:52]
-      
-    #Rounding
+    
+    # Step 6: Rounding
     if round:
-        #store the fifty third bit
+        # store the fifty third bit
         f52 = fiftythree_bits[52]
-        #check if we need to round
+        # check if we need to round
         if f52 == '1':
-            # find f_int with f= 0.f_int then round up by adding 1 to f_int
+            # find f_int with f = 0.f_int then round up by adding 1
             f_int = int(fiftytwo_bits, 2) + 1
-            #we convert it back to 52-bits
+            # convert it back to 52-bits
             fiftytwo_bits = format(f_int, '052b')
             
             # Handle overflow into cpart
@@ -132,7 +122,7 @@ def float64_to_real(sixtyfour_bits):
     Returns:
         x (float): Real number representation
     """
-    #Check for valid input
+    # Check for valid input
     if len(sixtyfour_bits) != 64 or any(c not in '01' for c in sixtyfour_bits):
         raise ValueError("Input must be a 64-bit binary string")
     
@@ -141,16 +131,16 @@ def float64_to_real(sixtyfour_bits):
     eleven_bits = sixtyfour_bits[1:12]
     fiftytwo_bits = sixtyfour_bits[12:]
     
-    #Compute the sign (-1)^s
+    # Compute the sign (-1)^s
     sign = (-1) ** s
     
-    #Find c
-    c= int(eleven_bits, 2)
+    # Find c
+    c = int(eleven_bits, 2)
     
-    #calculate the exponenet of 2, (c-1023)
-    exponent= c-1023
+    # Calculate the exponent of 2, (c-1023)
+    exponent = c - 1023
     
-    #Find f
+    # Find f
     fpart = 1.0  
     for i, bit in enumerate(fiftytwo_bits):
         fpart += int(bit) * (2 ** -(i + 1))
@@ -159,18 +149,18 @@ def float64_to_real(sixtyfour_bits):
     if eleven_bits == '1'*11:  # all 1s
         if '1' in fiftytwo_bits: # NaN
             return float('nan')
-        else:# Positive or Negative Infinity
+        else: # Positive or Negative Infinity
             return float('inf') if s == 0 else float('-inf')
     elif eleven_bits == '0'*11:  # all 0s
-        #case where x=0
+        # case where x=0
         if fiftytwo_bits == '0'*52: 
             return 0.0
         
-        #case where x<0 
+        # case where x<0
         fpart = 0
         for i, bit in enumerate(fiftytwo_bits):
             fpart += int(bit) * (2 ** -(i + 1))
-        return sign * fpart* (2 ** (exponent + 1))
+        return sign * fpart * (2 ** (exponent + 1))
 
     # Calculate x
     x = sign * fpart * (2 ** exponent)

@@ -49,7 +49,7 @@ def compare_conversions(real_to_float64, float64_to_real, nums, title="Test" , r
     print("\n" + "=" * 80)
     print(title.center(80))
     print("=" * 80)
-
+ 
     for x in nums:
         bits = real_to_float64(x,rounding)
         recovered = float64_to_real(bits)

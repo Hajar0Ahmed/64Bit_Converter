@@ -2,7 +2,7 @@
 
 A Python library and GUI application to convert real numbers to and from **IEEE 754 double-precision (64-bit) binary format**.  
 
-It provides both **chopping** and **rounding** methods, allowing precise control over the conversion process, and visualizes the results for educational purposes.
+It provides both **chopping** and **rounding** methods.
 
 
 ---
@@ -14,10 +14,12 @@ It provides both **chopping** and **rounding** methods, allowing precise control
 - Two conversion styles:
   - **Chopping**: Truncate the mantissa bits
   - **Rounding**: Round to nearest (ties to even)
-- Educational GUI with **color-coded, easy-to-read output**
 - Supports **special values** like `0`, `inf`, `-inf`, and `NaN`
+- A user-friendly Python GUI application to convert **real numbers** or **mathematical expressions** to **64-bit IEEE 754 binary representation**, and vice versa.  
 
 ---
+
+
 
 ## Installation
 

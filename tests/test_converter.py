@@ -1,59 +1,60 @@
 """
-test_converter.py
+tests/test_converter.py
 
-Basic tests and demos for the IEEE 754 converter library.
-Run this file directly to verify correctness of the chopping
-and rounding implementations.
+Contains:
+1. Demo runs (for interactive testing)
+2. Automated pytest tests (for correctness checking)
 """
-import sys
-import os
 
-# Get the absolute path of the project root (one level up from the tests folder)
+import os, sys, math
+import pytest
+
+# Find package
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Add it to sys.path so Python can find your package
 sys.path.append(project_root)
 
-from float64_converter.converter import (
-    real_to_float64,
-    float64_to_real
-)
-
-from float64_converter.utils import (
-    display_components,
-    compare_conversions,
-    compare_methods
-)
+from float64_converter.converter import real_to_float64, float64_to_real
+from float64_converter.utils import compare_conversions, compare_methods
 
 
-if __name__ == "__main__":
-    # A few values that test special cases, positives, and negatives
-    test_values = [
-        0.0, 1.0, -1.0,
-        12.375, -12.375,
-        0.1, 1.875 * (2 ** 10),2**(1/2),
-        float("inf"), float("-inf"), float("nan")
-    ]
+# Pytest 
+def test_basic():
+    """
+    Test that converts a number to it's 64 bit binary representation
+    and back gives approximately the same value.
+    
+    """
+    values = [0.0, 1.0, -1.0, 12.375, -12.375, 0.1, 
+              math.sqrt(2),1.0 + 2**30,1.5 + 2**-50, 123456789.123456789]
+    for val in values:
+        chopped_bits = real_to_float64(val, round=False)
+        rounded_bits = real_to_float64(val, round=True)        
 
-    #Test chopping
-    compare_conversions(
-        real_to_float64,
-        float64_to_real,
-        test_values,
-        title="CHOPPING METHOD",
-    )
+        # Verify that if you convert it to 64bits and back to a number it is the same
+        chopped_value = float64_to_real(chopped_bits)
+        rounded_value = float64_to_real(rounded_bits)
+        assert math.isclose(val, chopped_value, rel_tol=1e-15, abs_tol=1e-15)
+        assert math.isclose(val, rounded_value, rel_tol=1e-15, abs_tol=1e-15)
 
-    #Test rounding
-    compare_conversions(
-        real_to_float64,
-        float64_to_real,
-        test_values,
-        title="ROUNDING METHOD",
-        rounding=True
-    )
+def test_special_values():
+    """Check handling of special IEEE 754 values."""
+    # Positive infinity
+    inf_val = float("inf")
+    inf_bits = real_to_float64(inf_val)
+    assert float64_to_real(inf_bits) == inf_val
+    assert len(inf_bits) == 64
+    
+    # Negative infinity
+    neg_inf_val = float("-inf")
+    neg_inf_bits = real_to_float64(neg_inf_val)
+    assert float64_to_real(neg_inf_bits) == neg_inf_val
+    assert len(neg_inf_bits) == 64
+    
+    # NaN
+    nan_val = float("nan")
+    nan_bits = real_to_float64(nan_val)
+    recon_nan = float64_to_real(nan_bits)
+    assert math.isnan(recon_nan)
+    assert len(nan_bits) == 64
 
-    # Direct comparison example
-    compare_methods(
-        real_to_float64,
-        test_val=12.375
-    )
+

@@ -1,77 +1,126 @@
 import tkinter as tk
 from tkinter import ttk
 from float64_converter import converter
+import math
+import numpy as np
 
 class IEEE754ConverterApp:
     """
-    A GUI application for converting real numbers to and from
-    64-bit IEEE 754 floating-point representation.
+    A GUI application for converting expressions to 64-bit IEEE 754
+    floating-point representation and vice versa.
 
     Features:
-    - Input a real number.
+    - Input a real number or a mathematical expression (e.g., sin(2), sqrt(5), e^3, 1+29*e).
+    - Input a 64-bit binary string to convert back to a real number.
     - Choose conversion method: Chopping or Rounding.
-    - Display the 64-bit binary representation and recovered value.
+    - Copy the output to clipboard.
     """
 
     def __init__(self, root):
-        """
-        Initialize the application with the main window and widgets.
-
-        Parameters:
-            root (tk.Tk): The main Tkinter window.
-        """
         self.root = root
         self.root.title("64-bit IEEE 754 Converter")
-        self.root.geometry("750x450")
-        self.root.resizable(False, False)
+        self.root.state('zoomed')  # Fullscreen
         self.root.configure(bg="#1c1c1c")  # Dark gray background
 
-        # StringVar to store user choice of conversion method
+        # Variables
         self.method_var = tk.StringVar(value="chop")
-
-        # StringVar to store output text
         self.output_text = tk.StringVar()
+        self.input_var = tk.StringVar()
+        self.mode_var = tk.StringVar(value="expression")  # Expression or Binary
 
-        # Create all GUI components
         self.create_widgets()
 
     def create_widgets(self):
-        """Create and arrange all widgets in the application."""
         self._create_header()
+        self._create_instructions()
+        self._create_mode_frame()
         self._create_input_frame()
         self._create_output_frame()
         self._create_footer()
 
     def _create_header(self):
-        """Create the header label at the top of the window."""
-        header_label = tk.Label(
+        tk.Label(
             self.root,
             text="64-bit IEEE 754 Converter",
-            font=("Segoe UI", 22, "bold"),
+            font=("Segoe UI", 24, "bold"),
             bg="#1c1c1c",
             fg="#e0e0e0"
+        ).pack(pady=15)
+
+    def _create_instructions(self):
+        frame = tk.LabelFrame(
+            self.root,
+            text="Instructions",
+            font=("Segoe UI", 14, "bold"),
+            bg="#2c2c2c",
+            fg="#ffffff",
+            bd=2,
+            relief="ridge",
+            labelanchor="n",
+            padx=10,
+            pady=10
         )
-        header_label.pack(pady=15)
+        frame.pack(pady=10, fill="x", padx=20)
+
+        instruction_text = (
+            "• Enter a mathematical expression (e.g., sin(2), sqrt(5), e^3, 1+29*e) and convert it to 64-bit binary.\n"
+            "• Or enter a 64-bit binary string to convert back to a real number.\n"
+            "• Choose Chopping or Rounding for expression → binary conversion.\n"
+            "• Click Convert to see the result, and Copy to copy the output."
+        )
+
+        tk.Label(
+            frame,
+            text=instruction_text,
+            justify="left",
+            font=("Segoe UI", 12),
+            bg="#2c2c2c",
+            fg="#ffffff"
+        ).pack(anchor="w")
+
+    def _create_mode_frame(self):
+        frame = tk.Frame(self.root, bg="#2c2c2c")
+        frame.pack(pady=5, fill="x", padx=20)
+
+        tk.Radiobutton(
+            frame,
+            text="Expression → Binary",
+            variable=self.mode_var,
+            value="expression",
+            font=("Segoe UI", 11),
+            bg="#2c2c2c",
+            fg="#cccccc",
+            selectcolor="#3a3a3a"
+        ).pack(side="left", padx=10)
+
+        tk.Radiobutton(
+            frame,
+            text="Binary → Real Number",
+            variable=self.mode_var,
+            value="binary",
+            font=("Segoe UI", 11),
+            bg="#2c2c2c",
+            fg="#cccccc",
+            selectcolor="#3a3a3a"
+        ).pack(side="left", padx=10)
 
     def _create_input_frame(self):
-        """Create the input frame containing entry, radio buttons, and convert button."""
         frame = tk.Frame(self.root, bg="#2c2c2c")
         frame.pack(pady=10, fill="x", padx=20)
 
-        # Label for entry
         tk.Label(
             frame,
-            text="Enter a real number:",
+            text="Input:",
             font=("Segoe UI", 12),
             bg="#2c2c2c",
             fg="#ffffff"
         ).pack(side="left", padx=(0, 10))
 
-        # Entry widget for user input
         self.entry = tk.Entry(
             frame,
             font=("Consolas", 12),
-            width=20,
+            width=40,
+            textvariable=self.input_var,
             bg="#3a3a3a",
             fg="#ffffff",
             insertbackground="white",
@@ -79,54 +128,44 @@ class IEEE754ConverterApp:
         )
         self.entry.pack(side="left")
 
-        # Frame for radio buttons
-        radio_frame = tk.Frame(frame, bg="#2c2c2c")
-        radio_frame.pack(side="left", padx=15)
+        method_frame = tk.Frame(frame, bg="#2c2c2c")
+        method_frame.pack(side="left", padx=15)
 
-        # Create radio buttons
-        self._create_radio_button(radio_frame, "Chopping", "chop", "#cccccc")
-        self._create_radio_button(radio_frame, "Rounding", "round", "#aaaaaa")
+        tk.Radiobutton(
+            method_frame,
+            text="Chopping",
+            variable=self.method_var,
+            value="chop",
+            font=("Segoe UI", 11),
+            bg="#2c2c2c",
+            fg="#cccccc",
+            selectcolor="#3a3a3a"
+        ).pack(anchor="w")
+        tk.Radiobutton(
+            method_frame,
+            text="Rounding",
+            variable=self.method_var,
+            value="round",
+            font=("Segoe UI", 11),
+            bg="#2c2c2c",
+            fg="#aaaaaa",
+            selectcolor="#3a3a3a"
+        ).pack(anchor="w")
 
-        # Convert button
         tk.Button(
             frame,
             text="Convert",
-            command=self.convert_number,
+            command=self.convert,
             font=("Segoe UI", 12, "bold"),
             bg="#555555",
             fg="#ffffff",
             activebackground="#777777",
-            activeforeground="#ffffff",
             relief="flat",
             padx=10,
             pady=5
         ).pack(side="left", padx=10)
 
-    def _create_radio_button(self, parent, text, value, fg_color):
-        """
-        Create a single radio button.
-
-        Parameters:
-            parent (tk.Widget): Parent container for the radio button.
-            text (str): Label for the radio button.
-            value (str): Value assigned when the button is selected.
-            fg_color (str): Text color for the radio button.
-        """
-        tk.Radiobutton(
-            parent,
-            text=text,
-            variable=self.method_var,
-            value=value,
-            font=("Segoe UI", 11),
-            bg="#2c2c2c",
-            fg=fg_color,
-            selectcolor="#3a3a3a",
-            activeforeground=fg_color,
-            activebackground="#2c2c2c"
-        ).pack(side="top", anchor="w")
-
     def _create_output_frame(self):
-        """Create the output area to display results."""
         frame = tk.LabelFrame(
             self.root,
             text="Result",
@@ -150,42 +189,60 @@ class IEEE754ConverterApp:
             fg="#ffffff"
         ).pack(anchor="w")
 
+        # Copy button at bottom right
+        tk.Button(
+            frame,
+            text="Copy",
+            command=self.copy_output,
+            font=("Segoe UI", 10),
+            bg="#555555",
+            fg="#ffffff",
+            activebackground="#777777",
+            relief="flat",
+            padx=5,
+            pady=2
+        ).pack(anchor="e", side="bottom", pady=5)
+
     def _create_footer(self):
-        """Create the footer label at the bottom of the window."""
-        footer_label = tk.Label(
+        tk.Label(
             self.root,
             text="Python 64-bit IEEE 754 Converter",
             font=("Segoe UI", 10),
             bg="#1c1c1c",
             fg="#888888"
-        )
-        footer_label.pack(side="bottom", pady=10)
+        ).pack(side="bottom", pady=10)
 
-    def convert_number(self):
-        """
-        Convert the input number to 64-bit IEEE 754 format based on
-        the selected method and display the results.
-        """
+    def convert(self):
+        mode = self.mode_var.get()
+        user_input = self.input_var.get().strip()
+
         try:
-            # Read user input
-            number = float(self.entry.get())
-            method = self.method_var.get()
-
-            # Perform conversion based on method
-            if method == "chop":
-                binary_repr = converter.real_to_float64(number)
+            if mode == "expression":
+                # Evaluate expression safely
+                allowed_names = {
+                    k: getattr(math, k) for k in dir(math) if not k.startswith("__")
+                }
+                allowed_names.update({"e": math.e, "pi": math.pi})
+                number = eval(user_input, {"__builtins__": None}, allowed_names)
+                method = self.method_var.get()
+                if method == "chop":
+                    binary_repr = converter.real_to_float64(number)
+                else:
+                    binary_repr = converter.real_to_float64(number, round=True)
+                self.output_text.set(f"{binary_repr}")
             else:
-                binary_repr = converter.real_to_float64(number, round=True)
+                # Binary → Real
+                if len(user_input) != 64 or any(c not in "01" for c in user_input):
+                    raise ValueError("Input must be a 64-bit binary string")
+                real_val = converter.float64_to_real(user_input)
+                self.output_text.set(f"{real_val}")
 
-            # Recover the real number from binary
-            recovered_value = converter.float64_to_real(binary_repr)
+        except Exception as e:
+            self.output_text.set(f"Error: {str(e)}")
 
-            # Update output text
-            self.output_text.set(f"Binary: {binary_repr}\nRecovered: {recovered_value}")
-
-        except ValueError:
-            self.output_text.set("Invalid input! Please enter a valid number.")
-
+    def copy_output(self):
+        self.root.clipboard_clear()
+        self.root.clipboard_append(self.output_text.get())
 
 if __name__ == "__main__":
     root = tk.Tk()
