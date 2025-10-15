@@ -29,16 +29,16 @@ Make sure Python 3.10+ is installed.
 
 # Project Structure 
 64Bit_Converter/
-├─ venv/ # Python virtual environment (not included in repo)
-├─ float64_converter/ # Core conversion module
-│ ├─ init.py #Makes IEEE 754 Conversion package
-│ ├─ converter.py # Functions for real to 64bit binary conversion and vice versa
-│ └─ utils.py # Helper functions to display and compare methods
-├─ tests/ # Pytest unit tests
-│ └─ test_converter.py
-├─ app.py # Main GUI application
-├─ README.md # This file
-└─ .gitignore # Files to ignore in Git
+├─ venv/                 # Python virtual environment (not included in repo)
+├─ float64_converter/    # Core conversion module
+│  ├─ __init__.py        # Makes IEEE 754 Conversion package
+│  ├─ converter.py       # Functions for real to 64-bit binary conversion and vice versa
+│  └─ utils.py           # Helper functions to display and compare methods
+├─ tests/                # Pytest unit tests
+│  └─ test_converter.py
+├─ app.py                # Main GUI application
+├─ README.md             # This file
+└─ .gitignore            # Files to ignore in Git
 
 # How to Run the Application:
 
