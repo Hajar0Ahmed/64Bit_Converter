@@ -1,5 +1,5 @@
 """
-IEEE 754 Conversion Library
+IEEE 754 Conversion Package
 
 A small toolkit for exploring 64-bit floating-point 
 (IEEE 754 double precision) representations.
@@ -16,8 +16,7 @@ Modules:
 
 # __init__.py
 from .converter import (
-    real_to_float64_chopping,
-    real_to_float64_rounding,
+    real_to_float64,
     float64_to_real
 )
 
@@ -28,8 +27,7 @@ from .utils import (
 )
 
 __all__ = [
-    "real_to_float64_chopping",
-    "real_to_float64_rounding",
+    "real_to_float64",
     "float64_to_real",
     "display_components",
     "compare_conversions",
