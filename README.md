@@ -4,7 +4,6 @@ A Python library and GUI application to convert real numbers to and from **IEEE 
 
 It provides both **chopping** and **rounding** methods.
 
-
 ---
 
 ## Features
@@ -18,13 +17,60 @@ It provides both **chopping** and **rounding** methods.
 - A user-friendly Python GUI application to convert **real numbers** or **mathematical expressions** to **64-bit IEEE 754 binary representation**, and vice versa.  
 
 ---
+# Required Libraries
+This project uses only standard Python libraries:
 
+1. `tkinter` (GUI framework for the application. Included in standard Python.)
+2. `math` (to evaluate expressions like sin(2), log(5), etc.)
+3. `pytest`  (For automated testing of conversion functions.)
+4. `os` & `sys`  (For managing paths (used in tests))
 
+Make sure Python 3.10+ is installed.
 
-## Installation
+# Project Structure 
+64Bit_Converter/
+├─ venv/ # Python virtual environment (not included in repo)
+├─ float64_converter/ # Core conversion module
+│ ├─ init.py #Makes IEEE 754 Conversion package
+│ ├─ converter.py # Functions for real to 64bit binary conversion and vice versa
+│ └─ utils.py # Helper functions to display and compare methods
+├─ tests/ # Pytest unit tests
+│ └─ test_converter.py
+├─ app.py # Main GUI application
+├─ README.md # This file
+└─ .gitignore # Files to ignore in Git
 
-Clone the repository:
+# How to Run the Application:
+
+1. Install the repository
 
 ```bash
 git clone https://github.com/Hajar0Ahmed/float64_converter.git
 cd float64_converter
+```
+
+2. Open terminal
+3. Navigate to the project folder:
+
+```bash
+cd path/to/64Bit_Converter
+```
+
+4. Activate a virtual enviornment
+
+```bash
+# For Windows
+venv\Scripts\activate
+
+# For macOS/Linux
+source venv/bin/activate
+```
+5. Run the GUI app
+```bash
+python app.py
+```
+6. The application window will open. Use it to:
+
+- Enter a real number or mathematical expression (cos(3),e**2,etc.) and convert it to 64-bit binary.
+- Enter a 64-bit binary string and convert it back to a real number.
+- Copy the binary output using the small Copy button at the bottom right to check conversion both ways.

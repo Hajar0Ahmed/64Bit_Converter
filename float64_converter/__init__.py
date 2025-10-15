@@ -1,5 +1,5 @@
 """
-IEEE 754 Conversion Library
+IEEE 754 Conversion Package
 
 A small toolkit for exploring 64-bit floating-point 
 (IEEE 754 double precision) representations.
