@@ -173,9 +173,9 @@ class IEEE754ConverterApp:
 
             # Perform conversion based on method
             if method == "chop":
-                binary_repr = converter.real_to_float64_chopping(number)
+                binary_repr = converter.real_to_float64(number)
             else:
-                binary_repr = converter.real_to_float64_rounding(number)
+                binary_repr = converter.real_to_float64(number, round=True)
 
             # Recover the real number from binary
             recovered_value = converter.float64_to_real(binary_repr)
