@@ -45,19 +45,19 @@ def chop_vs_round_plot():
         chop_bits = real_to_float64(x_str, round=False)
         round_bits = real_to_float64(x_str, round=True)
 
-    x_back_chop = Decimal(str(float64_to_real(chop_bits)))
-    x_back_round = Decimal(str(float64_to_real(round_bits)))
-    x_dec = Decimal(x_str)
+        x_back_chop = Decimal(str(float64_to_real(chop_bits)))
+        x_back_round = Decimal(str(float64_to_real(round_bits)))
+        x_dec = Decimal(x_str)
 
-    # Compute relative errors safely
-    rel_err_chop = abs(x_dec - x_back_chop)/abs(x_dec) if x_dec != 0 else abs(x_dec - x_back_chop)
-    rel_err_round = abs(x_dec - x_back_round)/abs(x_dec) if x_dec != 0 else abs(x_dec - x_back_round)
+        # Compute relative errors safely
+        rel_err_chop = abs(x_dec - x_back_chop)/abs(x_dec) if x_dec != 0 else abs(x_dec - x_back_chop)
+        rel_err_round = abs(x_dec - x_back_round)/abs(x_dec) if x_dec != 0 else abs(x_dec - x_back_round)
 
-    # Skip zero errors to avoid log10(0)
-    if rel_err_chop > 0 or rel_err_round > 0:
-        X_values.append(float(x_dec))
-        log10_errors_chop.append(math.log10(float(rel_err_chop)) if rel_err_chop > 0 else np.nan)
-        log10_errors_round.append(math.log10(float(rel_err_round)) if rel_err_round > 0 else np.nan)
+        # Skip zero errors to avoid log10(0)
+        if rel_err_chop > 0 or rel_err_round > 0:
+            X_values.append(float(x_dec))
+            log10_errors_chop.append(math.log10(float(rel_err_chop)) if rel_err_chop > 0 else np.nan)
+            log10_errors_round.append(math.log10(float(rel_err_round)) if rel_err_round > 0 else np.nan)
 
     # --- Plot ---
     plt.style.use('seaborn-v0_8-whitegrid')
