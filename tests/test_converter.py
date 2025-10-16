@@ -1,9 +1,11 @@
 """
 tests/test_converter.py
 
-Contains:
-1. Demo runs (for interactive testing)
-2. Automated pytest tests (for correctness checking)
+Contains Automated pytest tests that test:
+1. Basic Functionality of the Algorithms
+2. Edge Cases
+4. Rounding and Chopping
+5. Stability and Error
 """
 
 import os, sys, math
@@ -15,6 +17,17 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
 from float64_converter.converter import real_to_float64, float64_to_real
+
+# Machine Epsilon for 64-bit float: 2^-52
+MACHINE_EPSILON = Decimal(2)**Decimal(-52)
+
+# Theoretical bounds for relative error:
+# 1. Tighter bound for correct rounding (Round Half to Even)
+ROUNDING_BOUND = MACHINE_EPSILON / 2 
+# 2. Looser bound for chopping (Maximum error is 1 ulp)
+CHOPPING_BOUND = MACHINE_EPSILON 
+
+
 
 def test_basic():
     """
@@ -127,6 +140,74 @@ def test_64bit_strings():
         # These should differ at least in some bit(s)
         assert chop_bits != round_bits, f"{x} unexpectedly identical for chop and round"
 
-    # Optional: Print results for visual inspection
-    for x in approx_numbers:
-        print(f"{x}: chop={real_to_float64(x, round=False)} round={real_to_float64(x, round=True)}")
+        
+        
+
+STABILITY_TEST_VALUES = [
+    Decimal("0"),
+    Decimal("-0"),
+    Decimal("1"),
+    Decimal("-1"),
+    Decimal("3.141592653589793"),
+    Decimal("2.718281828459045"),
+    Decimal("1E-308"),  #denormalized range
+    Decimal("1E-300"),
+    Decimal("1E+300"),
+]
+
+@pytest.mark.parametrize("x", STABILITY_TEST_VALUES)
+@pytest.mark.parametrize("rounding", [True, False])
+def test_stability_and_error(x, rounding):
+    """
+    Test that:
+    1. Converting to 64-bit float and back stays within the theoretical relative error bound (Error Analysis)
+    2. Small perturbations in input do not cause disproportionate changes in output (Stability Analysis)
+    """
+    try:
+        bits = real_to_float64(x, round=rounding)
+        x_comp = float64_to_real(bits)
+    except InvalidOperation:
+        pytest.fail(f"Decimal operation failed for x={x}, rounding={rounding}")
+
+    # Skip special values
+    if isinstance(x_comp, float) and (math.isnan(x_comp) or math.isinf(x_comp)):
+        pytest.skip("Skipping special value test (NaN or Infinity)")
+
+    # Convert to Decimal for precise error calculation
+    x_true_dec = Decimal(str(x))
+    x_comp_dec = Decimal(str(x_comp))
+
+    # 1. Error Analysis
+    abs_error = abs(x_true_dec - x_comp_dec)
+    rel_error = Decimal(0) if x_true_dec.is_zero() else abs_error / abs(x_true_dec)
+
+    current_bound = ROUNDING_BOUND if rounding else CHOPPING_BOUND
+    mode_name = 'Rounding (Epsilon/2)' if rounding else 'Chopping (Epsilon)'
+
+    # Skip denomalized numbers
+    if abs(x_true_dec) >= Decimal(2) ** -1022:
+        assert rel_error <= current_bound, (
+            f"Relative error {rel_error} exceeded bound for x={x} in {mode_name} mode. "
+            f"Bound: {current_bound}"
+        )
+ 
+    # 2. Stability Analysis
+    
+    # Small variation in input
+    delta = Decimal('1e-15') * max(Decimal(1), abs(x_true_dec))
+    x_plus = x_true_dec + delta
+    x_minus = x_true_dec - delta
+
+    # Convert values
+    comp_plus = Decimal(str(float64_to_real(real_to_float64(x_plus, round=rounding))))
+    comp_minus = Decimal(str(float64_to_real(real_to_float64(x_minus, round=rounding))))
+
+    # Numerical sensitivity (approx derivative)
+    sensitivity = abs(comp_plus - comp_minus) / (2 * delta)
+
+    # Stability criterion: output should not be disproportionately large
+    # Typically, for IEEE 64-bit floats, sensitivity <= 1 is expected for well-behaved numbers
+    # (We can allow a tiny margin due to rounding)
+    assert sensitivity <= Decimal(1.1), (
+        f"Sensitivity {sensitivity} too high for x={x} in {mode_name} mode"
+    )
