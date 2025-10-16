@@ -61,7 +61,7 @@ def chop_vs_round_plot():
 
     # --- Plot ---
     plt.style.use('seaborn-v0_8-whitegrid')
-    fig, ax = plt.subplots(figsize=(12, 6), dpi=120)
+    fig, ax = plt.subplots(figsize=(14, 7), dpi=120)
 
     round_color = "#1f77b4"
     chop_color = "#d62728"
@@ -73,12 +73,12 @@ def chop_vs_round_plot():
     log10_epsilon = math.log10(np.finfo(float).eps)
     ax.axhline(y=log10_epsilon, color=eps_color, linestyle='--', linewidth=1.5, label=f"$\\log_{{10}}(\\varepsilon)$ ≈ {log10_epsilon:.2f}")
 
-    ax.set_xlabel("Original Value (Decimal)", fontsize=12)
-    ax.set_ylabel(r"log$_{10}$(Relative Error)", fontsize=12, labelpad=10)
+    ax.set_xlabel("Original Value (Decimal)", fontsize=14)
+    ax.set_ylabel(r"log$_{10}$(Relative Error)", fontsize=14, labelpad=10)
     ax.set_title("Comparison of Chopping vs Rounding Relative Errors in IEEE 754", fontsize=14, fontweight='bold')
 
     ax.xaxis.set_major_locator(MaxNLocator(nbins=6))
-    ax.tick_params(axis='both', which='major', labelsize=10)
+    ax.tick_params(axis='both', which='major', labelsize=14)
     ax.grid(alpha=0.25)
     ax.legend(frameon=True, fontsize=10)
 
@@ -86,6 +86,7 @@ def chop_vs_round_plot():
     min_y = min(filter(lambda v: not np.isnan(v), log10_errors_chop + log10_errors_round))
     max_y = max(filter(lambda v: not np.isnan(v), log10_errors_chop + log10_errors_round))
     ax.set_ylim(min_y - 0.5, max_y + 0.5)
+    
 
     plt.tight_layout()
 
