@@ -20,16 +20,7 @@ from .converter import (
     float64_to_real
 )
 
-from .utils import (
-    display_components,
-    compare_conversions,
-    compare_methods
-)
-
 __all__ = [
     "real_to_float64",
     "float64_to_real",
-    "display_components",
-    "compare_conversions",
-    "compare_methods",
 ]

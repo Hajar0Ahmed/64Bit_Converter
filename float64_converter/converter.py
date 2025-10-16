@@ -11,36 +11,55 @@ Includes two conversion styles:
 """
 
 import math
+from decimal import Decimal, getcontext, ROUND_DOWN, ROUND_HALF_EVEN
+
+getcontext().prec = 70
+
+
 
 def real_to_float64(x , round=False):
     """
-    Convert real number to 64-bit IEEE 754 using the formula:
+    Convert a real number (str, Decimal, or float) to 64-bit IEEE 754 using the formula: 
+    using the formula:
     
      x =  (-1)^s * 2^(c-1023) * (f+1)
     
     Input:
-        x (float): Real number to convert
-        
+        x (str, Decimal, or float): Real number to convert.
         round (boolean): A Boolean indicating whether to round the 64th bit if True
         or chop after the 64th bit if False.
-    
     Returns:
-        str: 64-bit binary string representation
+        str: 64-bit binary string representation.
     """
-    # Step 1: Find s
-    s = 0 if x >= 0 else 1
-    x = abs(x)
+    # 1. Convert input to Decimal for high-precision internal math
+    if isinstance(x, str):
+        x = Decimal(x)
+    elif isinstance(x, (float, int)):
+        # Convert float to Decimal using its exact string representation
+        # to avoid double rounding errors on input.
+        x = Decimal.from_float(x)
+    elif isinstance(x, Decimal):
+        x = x
+    else:
+        raise TypeError("Input must be a float, int, str, or Decimal.")
+    
     
     # Check for The Following Special Cases
-    if math.isnan(x):
+    if x.is_nan():
         # x is undefined or something we can't calculate
         return "0" + "1" * 11 + "1" + "0" * 51  # NaN
-    if math.isinf(x):
-        # x is infinity or negative infinity
-        return f"{s}" + "1" * 11 + "0" * 52
-    if x == 0.0:
-        # x is zero
-        return f"{s}" + "0" * 63
+    
+    if x.is_infinite():
+        s = 1 if x.is_signed() else 0
+        return f"{s}" + "1"*11 + "0"*52
+    if x.is_zero():
+        s = 1 if x.is_signed() else 0
+        return f"{s}" + "0"*63
+
+    #  Normal numbers: now it's safe to compute sign
+    s = 1 if x.is_signed() else 0
+    x = x.copy_abs()
+
     
     # Step 2: Find the c and f
     # We use the following Equation: |x| = 2^cpart * fpart
@@ -73,42 +92,34 @@ def real_to_float64(x , round=False):
     if c <= 0:  # Underflow to zero
         return f"{s}" + '0'*63
     
-    # Step 3: Find 11bit: c10,c9,c8,...,c0
-    eleven_bits = format(c, '011b')
-    
-    # Step 4: Find 52bit: f1,f2,...,f53 (extra bit for rounding)
-    fiftythree_bits = ''
-    ftemp = f
-    
-    for _ in range(53):
-        # f = f1*2^-1 + f2*2^-2 + ... + f52*2^-52 + f53*2^-53
-        ftemp *= 2
-        bit = int(ftemp)
-        fiftythree_bits += str(bit)
-        ftemp -= bit
-    
-    # Step 5: Chopping result
-    fiftytwo_bits = fiftythree_bits[:52]
-    
-    # Step 6: Rounding
     if round:
-        # store the fifty third bit
-        f52 = fiftythree_bits[52]
-        # check if we need to round
-        if f52 == '1':
-            # find f_int with f = 0.f_int then round up by adding 1
-            f_int = int(fiftytwo_bits, 2) + 1
-            # convert it back to 52-bits
-            fiftytwo_bits = format(f_int, '052b')
-            
-            # Handle overflow into cpart
-            if len(fiftytwo_bits) > 52:
-                fiftytwo_bits = fiftytwo_bits[-52:]
-                cpart = int(eleven_bits, 2) + 1
-                eleven_bits = format(cpart, '011b')
+        fiftytwo_int = (f * (2**52)).to_integral_value(rounding=ROUND_HALF_EVEN)
+    else:
+        fiftytwo_int = (f * (2**52)).to_integral_value(rounding=ROUND_DOWN)
     
+    # Calculate f_scaled: This is the normalized fraction f, scaled by 2^52
+    f_scaled = f * (2**52) # f * 4503599627370496
+    
+    # ... Apply rounding ...
+    
+    if fiftytwo_int >= 2**52:
+        # 1. Reset mantissa to zero (52 zeros)
+        fiftytwo_int = 0
+        
+        # 2. Increment the exponent
+        c += 1
+        
+        # 3. Check for Exponent Overflow (Infinity)
+        if c >= 2047:
+            s = 1 if x.is_signed() else 0 # Use the original sign for infinity
+            return f"{s}" + '1'*11 + '0'*52
+
+    fiftytwo_bits = format(int(fiftytwo_int), '052b')
+    eleven_bits = format(c, '011b')
+
+    # Step 6: Combine sign, exponent, and fraction into 64-bit string
     return f"{s}" + eleven_bits + fiftytwo_bits
-    
+
 
 def float64_to_real(sixtyfour_bits):
     """
@@ -120,48 +131,60 @@ def float64_to_real(sixtyfour_bits):
         sixtyfour_bits (str): 64-bit binary string
     
     Returns:
-        x (float): Real number representation
+        x : Real number representation
     """
-    # Check for valid input
     if len(sixtyfour_bits) != 64 or any(c not in '01' for c in sixtyfour_bits):
         raise ValueError("Input must be a 64-bit binary string")
     
-    # Extract components (s,11bit,52bit)
-    s = int(sixtyfour_bits[0],2)
+    # Extract components
+    s = int(sixtyfour_bits[0])
     eleven_bits = sixtyfour_bits[1:12]
     fiftytwo_bits = sixtyfour_bits[12:]
     
-    # Compute the sign (-1)^s
-    sign = (-1) ** s
-    
-    # Find c
+    sign = Decimal((-1) ** s)
     c = int(eleven_bits, 2)
-    
-    # Calculate the exponent of 2, (c-1023)
-    exponent = c - 1023
-    
-    # Find f
-    fpart = 1.0  
-    for i, bit in enumerate(fiftytwo_bits):
-        fpart += int(bit) * (2 ** -(i + 1))
+    exponent = Decimal(c - 1023)
     
     # Check special cases
-    if eleven_bits == '1'*11:  # all 1s
-        if '1' in fiftytwo_bits: # NaN
+    if eleven_bits == '1'*11:  # Infinity or NaN
+        if '1' in fiftytwo_bits:
             return float('nan')
-        else: # Positive or Negative Infinity
+        else:
             return float('inf') if s == 0 else float('-inf')
-    elif eleven_bits == '0'*11:  # all 0s
-        # case where x=0
+
+    elif eleven_bits == '0'*11:  # Zero or Denormalized (Subnormal)
+        # Case where x=0
         if fiftytwo_bits == '0'*52: 
             return 0.0
         
-        # case where x<0
-        fpart = 0
+        # Denormalized case (exponent is fixed at -1022, implicit '1' is '0')
+        E_denorm = Decimal(-1022) 
+        F_denorm = Decimal(0)
+        
+        # Calculate the fraction (0.f1 f2...)
         for i, bit in enumerate(fiftytwo_bits):
-            fpart += int(bit) * (2 ** -(i + 1))
-        return sign * fpart * (2 ** (exponent + 1))
+            F_denorm += Decimal(bit) * (Decimal(2) ** Decimal(-(i + 1)))
+        
+        # Denorm value = sign * 2^-1022 * (0 + F)
+        x = sign * F_denorm * (Decimal(2) ** E_denorm)
+        
+        # We return the raw Decimal object, which is better for error calculation
+        return x 
 
-    # Calculate x
-    x = sign * fpart * (2 ** exponent)
+    # Normalized Case (The vast majority of numbers)
+    
+    # Calculate fpart (1.f1 f2...): Start with the implicit leading '1'
+    fpart = Decimal(1) 
+    
+    # Calculate the fraction part (f)
+    for i, bit in enumerate(fiftytwo_bits):
+        # *** KEY FIX: Use Decimal for base, exponent, and multiplier ***
+        fpart += Decimal(bit) * (Decimal(2) ** Decimal(-(i + 1)))
+
+    # Calculate x = sign * fpart * 2^exponent
+    # ** KEY FIX: Use Decimal for the final multiplication **
+    x = sign * fpart * (Decimal(2) ** exponent)
+    
+    # Return Decimal object for use in your table's error calculation
     return x
+

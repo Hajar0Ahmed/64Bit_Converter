@@ -141,6 +141,7 @@ class IEEE754ConverterApp:
             fg="#cccccc",
             selectcolor="#3a3a3a"
         ).pack(anchor="w")
+        
         tk.Radiobutton(
             method_frame,
             text="Rounding",
@@ -156,6 +157,19 @@ class IEEE754ConverterApp:
             frame,
             text="Convert",
             command=self.convert,
+            font=("Segoe UI", 12, "bold"),
+            bg="#555555",
+            fg="#ffffff",
+            activebackground="#777777",
+            relief="flat",
+            padx=10,
+            pady=5
+            )  .pack(side="left", padx=10)
+
+        tk.Button(
+            frame,
+            text="Clear",
+            command=lambda: self.input_var.set(""),  # Clears the input
             font=("Segoe UI", 12, "bold"),
             bg="#555555",
             fg="#ffffff",
@@ -218,28 +232,53 @@ class IEEE754ConverterApp:
 
         try:
             if mode == "expression":
-                # Evaluate expression safely
+                # Detect if user entered a binary number instead
+                if all(c in "01" for c in user_input) and len(user_input) > 1:
+                    self.output_text.set(
+                        "Change Mode Message: \n"
+                        "It looks like you entered a binary number\n"
+                        "If you meant to convert binary → real number,\n"
+                        "please select the 'Binary → Real Number' option above."
+                    )
+                    return
+
+                # Safely evaluate mathematical expression
                 allowed_names = {
                     k: getattr(math, k) for k in dir(math) if not k.startswith("__")
                 }
                 allowed_names.update({"e": math.e, "pi": math.pi})
                 number = eval(user_input, {"__builtins__": None}, allowed_names)
+
                 method = self.method_var.get()
                 if method == "chop":
                     binary_repr = converter.real_to_float64(number)
                 else:
                     binary_repr = converter.real_to_float64(number, round=True)
+
                 self.output_text.set(f"{binary_repr}")
-            else:
+
+            else:  # mode == "binary"
+                # Detect if user entered something that looks like a math expression
+                if any(c not in "01" for c in user_input):
+                    self.output_text.set(
+                        "Change Mode Message:\n"
+                        "It looks like you entered a mathematical expression or number.\n"
+                        "If you meant to convert expression → binary,\n"
+                        "please select the 'Expression → Binary' option above."
+                    )
+                    return
+
                 # Binary → Real
-                if len(user_input) != 64 or any(c not in "01" for c in user_input):
+                if len(user_input) != 64:
                     raise ValueError("Input must be a 64-bit binary string")
+
                 real_val = converter.float64_to_real(user_input)
                 self.output_text.set(f"{real_val}")
 
         except Exception as e:
             self.output_text.set(f"Error: {str(e)}")
-
+        
+        
     def copy_output(self):
         self.root.clipboard_clear()
         self.root.clipboard_append(self.output_text.get())
