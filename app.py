@@ -19,7 +19,7 @@ class IEEE754ConverterApp:
     def __init__(self, root):
         self.root = root
         self.root.title("64-bit IEEE 754 Converter")
-        self.root.state('zoomed')  # Fullscreen
+        self.root.geometry('1200x800')  # Fullscreen
         self.root.configure(bg="#1c1c1c")  # Dark gray background
 
         # Variables
