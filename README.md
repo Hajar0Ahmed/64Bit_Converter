@@ -28,15 +28,14 @@ Make sure Python 3.10+ is installed.
 1. Install the repository
 
 ```bash
-git clone https://github.com/Hajar0Ahmed/64-Bit_converter
-cd float64_converter
+git clone https://github.com/Hajar0Ahmed/64Bit_converter
 ```
 
 2. Open terminal
 3. Navigate to the project folder:
 
 ```bash
-cd path/to/64Bit_Converter
+cd 64Bit_Converter
 ```
 
 4. Activate a virtual enviornment
