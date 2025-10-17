@@ -17,13 +17,9 @@ It provides both **chopping** and **rounding** methods.
 - A user-friendly Python GUI application to convert **real numbers** or **mathematical expressions** to **64-bit IEEE 754 binary representation**, and vice versa.  
 
 ---
-# Required Libraries
-This project uses only standard Python libraries:
+# System Requirements 
 
-1. `tkinter` (GUI framework for the application. Included in standard Python.)
-2. `math` (to evaluate expressions like sin(2), log(5), etc.)
-3. `pytest`  (For automated testing of conversion functions.)
-4. `os` & `sys`  (For managing paths (used in tests))
+`pytest`  (For automated testing of conversion functions and stability testing.)
 
 Make sure Python 3.10+ is installed.
 
