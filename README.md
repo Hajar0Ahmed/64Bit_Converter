@@ -28,7 +28,7 @@ Make sure Python 3.10+ is installed.
 1. Install the repository
 
 ```bash
-git clone https://github.com/Hajar0Ahmed/float64_converter.git
+git clone https://github.com/Hajar0Ahmed/64-Bit_converter
 cd float64_converter
 ```
 
