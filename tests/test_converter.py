@@ -50,7 +50,6 @@ def test_basic():
         ]
     
     for val in values:
-        # Note: These values rely on Decimal.from_float(val) to be accurate for Python floats.
         chopped_bits = real_to_float64(val, round=False)
         rounded_bits = real_to_float64(val, round=True)        
 
@@ -206,8 +205,7 @@ def test_stability_and_error(x, rounding):
     sensitivity = abs(comp_plus - comp_minus) / (2 * delta)
 
     # Stability criterion: output should not be disproportionately large
-    # Typically, for IEEE 64-bit floats, sensitivity <= 1 is expected for well-behaved numbers
-    # (We can allow a tiny margin due to rounding)
+    # For IEEE 64-bit floats, sensitivity <= 1 is expected for well-behaved numbers
     assert sensitivity <= Decimal(1.1), (
         f"Sensitivity {sensitivity} too high for x={x} in {mode_name} mode"
     )

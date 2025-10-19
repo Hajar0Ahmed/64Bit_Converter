@@ -152,7 +152,7 @@ def float64_to_real(sixtyfour_bits):
         else:
             return float('inf') if s == 0 else float('-inf')
 
-    elif eleven_bits == '0'*11:  # Zero or Denormalized (Subnormal)
+    elif eleven_bits == '0'*11:  # Zero or Denormalized
         # Case where x=0
         if fiftytwo_bits == '0'*52: 
             return 0.0
@@ -165,7 +165,7 @@ def float64_to_real(sixtyfour_bits):
         for i, bit in enumerate(fiftytwo_bits):
             F_denorm += Decimal(bit) * (Decimal(2) ** Decimal(-(i + 1)))
         
-        # Denorm value = sign * 2^-1022 * (0 + F)
+        # Denormalized value = sign * 2^-1022 * (0 + F)
         x = sign * F_denorm * (Decimal(2) ** E_denorm)
         
         # We return the raw Decimal object, which is better for error calculation
@@ -178,11 +178,9 @@ def float64_to_real(sixtyfour_bits):
     
     # Calculate the fraction part (f)
     for i, bit in enumerate(fiftytwo_bits):
-        # *** KEY FIX: Use Decimal for base, exponent, and multiplier ***
         fpart += Decimal(bit) * (Decimal(2) ** Decimal(-(i + 1)))
 
     # Calculate x = sign * fpart * 2^exponent
-    # ** KEY FIX: Use Decimal for the final multiplication **
     x = sign * fpart * (Decimal(2) ** exponent)
     
     # Return Decimal object for use in your table's error calculation
